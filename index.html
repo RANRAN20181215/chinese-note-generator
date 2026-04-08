@@ -1,180 +1,75 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <title>语文笔记生成器</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Microsoft YaHei", sans-serif;
-        }
-        body {
-            background-color: #f7f9fc;
-            max-width: 900px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-        .title {
-            text-align: center;
-            color: #2d3748;
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .sub-title {
-            text-align: center;
-            color: #718096;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-        .input-area {
-            margin-bottom: 15px;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 12px 15px;
-            font-size: 16px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            outline: none;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(to right, #667eea, #764ba2);
-            color: white;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        button:hover {
-            background: linear-gradient(to right, #5a6fd8, #6a4190);
-        }
-        .tips {
-            text-align: center;
-            color: #718096;
-            font-size: 12px;
-            margin-top: 8px;
-        }
-        .result-area {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            min-height: 300px;
-            white-space: pre-wrap;
-            line-height: 1.6;
-            font-size: 15px;
-            overflow-y: auto;
-            max-height: 600px;
-        }
-        .loading {
-            color: #667eea;
-            text-align: center;
-            padding: 20px;
-        }
-        .quick-buttons {
-            margin: 15px 0;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .quick-btn {
-            padding: 8px 16px;
-            background: #f0f0f0;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .quick-btn:hover {
-            background: #e0e0e0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>语文笔记生成器（Deepseek）</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:"Microsoft YaHei",sans-serif}
+    body{background:#f0f4f8;padding:20px;max-width:800px;margin:0 auto}
+    .title{text-align:center;color:#2d3748;margin-bottom:8px}
+    .sub{text-align:center;color:#718096;font-size:14px;margin-bottom:20px}
+    .input-box{display:flex;gap:10px;margin-bottom:15px}
+    input{flex:1;padding:12px 15px;border:1px solid #e2e8f0;border-radius:8px;font-size:16px}
+    button{padding:12px 20px;background:#4299e1;color:white;border:none;border-radius:8px;cursor:pointer}
+    button:hover{background:#3182ce}
+    .tips{text-align:center;color:#718096;font-size:13px;margin-bottom:20px}
+    .result{background:white;padding:20px;border-radius:8px;min-height:300px;white-space:pre-wrap;line-height:1.6;border:1px solid #e2e8f0}
+    .loading{color:#4299e1;text-align:center;padding:20px}
+  </style>
 </head>
 <body>
-    <div class="title">语文笔记生成器</div>
-    <div class="sub-title">AI智能生成 · 完整学习笔记</div>
+  <h1 class="title">语文笔记生成器</h1>
+  <div class="sub">Deepseek AI · 完整笔记 · 纯前端</div>
 
-    <div class="input-area">
-        <input type="text" id="textName" placeholder="请输入课文名称，例如：池上">
-    </div>
+  <div class="input-box">
+    <input type="text" id="lesson" placeholder="输入课文名，如：池上 / 小池 / 所见">
+    <button onclick="generate()">生成笔记</button>
+  </div>
+  <div class="tips">生成约 15–25 秒，请耐心等待</div>
 
-    <div class="quick-buttons">
-        <button class="quick-btn" onclick="fillText('池上')">池上</button>
-        <button class="quick-btn" onclick="fillText('小池')">小池</button>
-        <button class="quick-btn" onclick="fillText('海底世界')">海底世界</button>
-        <button class="quick-btn" onclick="fillText('桂林山水')">桂林山水</button>
-        <button class="quick-btn" onclick="fillText('匆匆')">匆匆</button>
-    </div>
+  <div id="result" class="result"></div>
 
-    <button onclick="generateNote()">🚀 开始爬取并生成笔记</button>
-    <div class="tips">💡 提示：点击按钮后，系统会自动生成资料，大约需要10-30秒</div>
+  <script>
+    // 👉 把你的 Deepseek API Key 填在这里
+    const DEEPSEEK_API_KEY = "sk-92ff5b774a0a481dbada2cc249266046";
+    const API_URL = "https://api.deepseek.com/chat/completions";
 
-    <div class="result-area" id="result"></div>
+    async function generate() {
+      const lesson = document.getElementById("lesson").value.trim();
+      const resDiv = document.getElementById("result");
+      
+      if (!lesson) { alert("请输入课文名！"); return; }
+      
+      resDiv.innerHTML = '<div class="loading">正在生成，请稍候...</div>';
 
-    <script>
-        // 替换为你的豆包API Key（https://open.doubao.com/ 获取）
-        const DOUPAO_API_KEY = "你的豆包API Key";
-        const DOUPAO_API_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
-        const MODEL_NAME = "ep-20250408150839-xxxx"; // 替换为你的模型端点ID
+      try {
+        const resp = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${DEEPSEEK_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "deepseek-chat", // 模型名固定
+            messages: [
+              {
+                role: "system",
+                content: "你是小学语文老师。按以下6部分生成完整笔记：1.课文原文 2.生字（拼音+组词）3.词语解释 4.句子解析 5.中心思想 6.课后练习。用清晰Markdown，适合小学生。"
+              },
+              { role: "user", content: lesson }
+            ],
+            temperature: 0.3
+          })
+        });
 
-        function fillText(text) {
-            document.getElementById("textName").value = text;
-        }
+        const data = await resp.json();
+        const note = data.choices?.[0]?.message?.content || "无返回内容";
+        resDiv.innerText = note;
 
-        async function generateNote() {
-            const textName = document.getElementById("textName").value.trim();
-            const resultDiv = document.getElementById("result");
-
-            if (!textName) {
-                alert("请输入课文名称！");
-                return;
-            }
-
-            resultDiv.innerHTML = '<div class="loading">✅ 笔记生成中，请稍候...</div>';
-
-            try {
-                const response = await fetch(DOUPAO_API_URL, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${DOUPAO_API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: MODEL_NAME,
-                        messages: [
-                            {
-                                role: "system",
-                                content: "你是一名资深小学语文老师，根据用户输入的课文名称，生成一份完整、规范的小学学习笔记，必须包含以下6个部分：1.课文原文 2.重点生字（带拼音、组词）3.重点词语（带释义）4.重点句子解析 5.中心思想 6.课后练习。使用清晰的Markdown格式，语言通俗易懂，符合小学生认知水平，不要多余内容。"
-                            },
-                            {
-                                role: "user",
-                                content: textName
-                            }
-                        ],
-                        temperature: 0.3,
-                        stream: false
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`API请求失败：${response.status}`);
-                }
-
-                const data = await response.json();
-                const note = data.choices[0].message.content;
-                resultDiv.innerText = note;
-
-            } catch (err) {
-                resultDiv.innerText = `生成失败：${err.message}\n\n请检查：\n1. API Key是否正确\n2. 模型端点ID是否正确\n3. 网络是否正常`;
-            }
-        }
-    </script>
+      } catch (err) {
+        resDiv.innerText = "❌ 失败：\n" + err.message + "\n\n检查：\n1. Key是否正确\n2. 网络是否能访问 api.deepseek.com\n3. 余额是否充足";
+      }
+    }
+  </script>
 </body>
 </html>
