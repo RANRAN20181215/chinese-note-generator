@@ -43,7 +43,7 @@
         button {
             width: 100%;
             padding: 12px;
-            background-color: #4299e1;
+            background: linear-gradient(to right, #667eea, #764ba2);
             color: white;
             font-size: 16px;
             border: none;
@@ -52,7 +52,7 @@
             font-weight: 500;
         }
         button:hover {
-            background-color: #3182ce;
+            background: linear-gradient(to right, #5a6fd8, #6a4190);
         }
         .tips {
             text-align: center;
@@ -70,25 +70,63 @@
             white-space: pre-wrap;
             line-height: 1.6;
             font-size: 15px;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+        .loading {
+            color: #667eea;
+            text-align: center;
+            padding: 20px;
+        }
+        .quick-buttons {
+            margin: 15px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .quick-btn {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .quick-btn:hover {
+            background: #e0e0e0;
         }
     </style>
 </head>
 <body>
     <div class="title">语文笔记生成器</div>
-    <div class="sub-title">AI智能生成 · 完整笔记</div>
+    <div class="sub-title">AI智能生成 · 完整学习笔记</div>
 
     <div class="input-area">
         <input type="text" id="textName" placeholder="请输入课文名称，例如：池上">
     </div>
 
-    <button onclick="generateNote()">生成完整笔记</button>
-    <div class="tips">生成需要10-20秒，请耐心等待</div>
+    <div class="quick-buttons">
+        <button class="quick-btn" onclick="fillText('池上')">池上</button>
+        <button class="quick-btn" onclick="fillText('小池')">小池</button>
+        <button class="quick-btn" onclick="fillText('海底世界')">海底世界</button>
+        <button class="quick-btn" onclick="fillText('桂林山水')">桂林山水</button>
+        <button class="quick-btn" onclick="fillText('匆匆')">匆匆</button>
+    </div>
+
+    <button onclick="generateNote()">🚀 开始爬取并生成笔记</button>
+    <div class="tips">💡 提示：点击按钮后，系统会自动生成资料，大约需要10-30秒</div>
 
     <div class="result-area" id="result"></div>
 
     <script>
-        // 把你的 API Key 填在这里
-        const OPENAI_API_KEY = "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";
+        // 替换为你的豆包API Key（https://open.doubao.com/ 获取）
+        const DOUPAO_API_KEY = "你的豆包API Key";
+        const DOUPAO_API_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
+        const MODEL_NAME = "ep-20250408150839-xxxx"; // 替换为你的模型端点ID
+
+        function fillText(text) {
+            document.getElementById("textName").value = text;
+        }
 
         async function generateNote() {
             const textName = document.getElementById("textName").value.trim();
@@ -99,37 +137,42 @@
                 return;
             }
 
-            resultDiv.innerText = "正在生成笔记，请稍候...";
+            resultDiv.innerHTML = '<div class="loading">✅ 笔记生成中，请稍候...</div>';
 
             try {
-                const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                const response = await fetch(DOUPAO_API_URL, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${OPENAI_API_KEY}`
+                        "Authorization": `Bearer ${DOUPAO_API_KEY}`
                     },
                     body: JSON.stringify({
-                        model: "gpt-3.5-turbo",
+                        model: MODEL_NAME,
                         messages: [
                             {
                                 role: "system",
-                                content: "你是一名小学语文老师。请根据课文名称，生成标准学习笔记，包含：1.课文原文 2.重点生字（带拼音）3.重点词语及解释 4.重点句子解析 5.中心思想 6.课后练习。使用清晰的Markdown格式，不要多余内容。"
+                                content: "你是一名资深小学语文老师，根据用户输入的课文名称，生成一份完整、规范的小学学习笔记，必须包含以下6个部分：1.课文原文 2.重点生字（带拼音、组词）3.重点词语（带释义）4.重点句子解析 5.中心思想 6.课后练习。使用清晰的Markdown格式，语言通俗易懂，符合小学生认知水平，不要多余内容。"
                             },
                             {
                                 role: "user",
                                 content: textName
                             }
                         ],
-                        temperature: 0.3
+                        temperature: 0.3,
+                        stream: false
                     })
                 });
+
+                if (!response.ok) {
+                    throw new Error(`API请求失败：${response.status}`);
+                }
 
                 const data = await response.json();
                 const note = data.choices[0].message.content;
                 resultDiv.innerText = note;
 
             } catch (err) {
-                resultDiv.innerText = "生成失败：" + err.message;
+                resultDiv.innerText = `生成失败：${err.message}\n\n请检查：\n1. API Key是否正确\n2. 模型端点ID是否正确\n3. 网络是否正常`;
             }
         }
     </script>
