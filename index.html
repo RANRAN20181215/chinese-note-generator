@@ -71,95 +71,66 @@
             line-height: 1.6;
             font-size: 15px;
         }
-        .success {
-            background-color: #c6f6d5;
-            color: #38a169;
-            padding: 10px;
-            border-radius: 6px;
-            text-align: center;
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
-        .grid-tips {
-            margin-top: 15px;
-            font-size: 14px;
-            color: #4a5568;
-        }
-        .grid-item {
-            display: inline-block;
-            padding: 6px 12px;
-            background-color: #e2e8f0;
-            border-radius: 6px;
-            margin: 0 6px 6px 0;
-            cursor: pointer;
-        }
-        .grid-item:hover {
-            background-color: #cbd5e0;
-        }
     </style>
 </head>
 <body>
     <div class="title">语文笔记生成器</div>
-    <div class="sub-title">智能爬虫版 · 自动从网络收集资料</div>
+    <div class="sub-title">AI智能生成 · 完整笔记</div>
 
     <div class="input-area">
         <input type="text" id="textName" placeholder="请输入课文名称，例如：池上">
     </div>
 
-    <button onclick="generateNote()">开始爬取并生成笔记</button>
-
-    <div class="tips">提示：点击按钮后，系统会自动爬取网络资料，大约需要30-60秒</div>
-
-    <div class="grid-tips">
-        试试这些课文：
-        <span class="grid-item" onclick="set课文('池上')">池上</span>
-        <span class="grid-item" onclick="set课文('海底世界')">海底世界</span>
-        <span class="grid-item" onclick="set课文('桂林山水')">桂林山水</span>
-        <span class="grid-item" onclick="set课文('匆匆')">匆匆</span>
-    </div>
+    <button onclick="generateNote()">生成完整笔记</button>
+    <div class="tips">生成需要10-20秒，请耐心等待</div>
 
     <div class="result-area" id="result"></div>
 
     <script>
-        function set课文(name) {
-            document.getElementById("textName").value = name;
-        }
+        // 把你的 API Key 填在这里
+        const OPENAI_API_KEY = "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";
 
-        function generateNote() {
-            let name = document.getElementById("textName").value.trim();
-            if(!name) {
-                alert("请先输入课文名称！");
+        async function generateNote() {
+            const textName = document.getElementById("textName").value.trim();
+            const resultDiv = document.getElementById("result");
+
+            if (!textName) {
+                alert("请输入课文名称！");
                 return;
             }
 
-            // 模拟爬虫延迟
-            setTimeout(() => {
-                let result = document.getElementById("result");
-                
-                // 成功提示
-                let html = '<div class="success">✅ 笔记生成完成！</div>';
+            resultDiv.innerText = "正在生成笔记，请稍候...";
 
-                // 生成笔记内容（你可以按需要替换成真实课文内容）
-                html += `
-【课文原文】
-《${name}》
-（此处为课文原文内容）
+            try {
+                const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${OPENAI_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-3.5-turbo",
+                        messages: [
+                            {
+                                role: "system",
+                                content: "你是一名小学语文老师。请根据课文名称，生成标准学习笔记，包含：1.课文原文 2.重点生字（带拼音）3.重点词语及解释 4.重点句子解析 5.中心思想 6.课后练习。使用清晰的Markdown格式，不要多余内容。"
+                            },
+                            {
+                                role: "user",
+                                content: textName
+                            }
+                        ],
+                        temperature: 0.3
+                    })
+                });
 
-【重点字词】
-- 示例字词1
-- 示例字词2
-- 示例字词3
+                const data = await response.json();
+                const note = data.choices[0].message.content;
+                resultDiv.innerText = note;
 
-【句子解析】
-1. 关键句子解析……
-2. 重点句式分析……
-
-【中心思想】
-本文通过描写……表达了……
-`;
-
-                result.innerHTML = html;
-            }, 3000); // 3秒模拟爬虫
+            } catch (err) {
+                resultDiv.innerText = "生成失败：" + err.message;
+            }
         }
     </script>
 </body>
