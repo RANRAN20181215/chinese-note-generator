@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>小学语文笔记生成器</title>
+    <title>语文笔记生成器</title>
     <style>
         * {
             margin: 0;
@@ -12,103 +12,154 @@
         }
         body {
             background-color: #f7f9fc;
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
         }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
+        .title {
             text-align: center;
-            color: #2d8cf0;
-            margin-bottom: 25px;
+            color: #2d3748;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
         }
-        .input-box {
+        .sub-title {
+            text-align: center;
+            color: #718096;
+            font-size: 14px;
             margin-bottom: 20px;
         }
-        input {
+        .input-area {
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
             width: 100%;
             padding: 12px 15px;
             font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
             outline: none;
         }
         button {
             width: 100%;
             padding: 12px;
-            background-color: #2d8cf0;
+            background-color: #4299e1;
             color: white;
             font-size: 16px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: 500;
         }
         button:hover {
-            background-color: #1b79e0;
+            background-color: #3182ce;
         }
-        .result {
-            width: 100%;
-            height: 350px;
+        .tips {
+            text-align: center;
+            color: #718096;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        .result-area {
             margin-top: 20px;
-            padding: 15px;
-            font-size: 16px;
-            border: 1px solid #ddd;
+            padding: 20px;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            min-height: 300px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        .success {
+            background-color: #c6f6d5;
+            color: #38a169;
+            padding: 10px;
             border-radius: 6px;
-            resize: none;
-            outline: none;
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        .grid-tips {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        .grid-item {
+            display: inline-block;
+            padding: 6px 12px;
+            background-color: #e2e8f0;
+            border-radius: 6px;
+            margin: 0 6px 6px 0;
+            cursor: pointer;
+        }
+        .grid-item:hover {
+            background-color: #cbd5e0;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>小学语文笔记生成器</h1>
-        <div class="input-box">
-            <input type="text" id="textName" placeholder="请输入课文名称">
-        </div>
-        <button onclick="generateNote()">生成笔记</button>
-        <textarea class="result" id="result" placeholder="生成的笔记会在这里显示，直接复制即可"></textarea>
+    <div class="title">语文笔记生成器</div>
+    <div class="sub-title">智能爬虫版 · 自动从网络收集资料</div>
+
+    <div class="input-area">
+        <input type="text" id="textName" placeholder="请输入课文名称，例如：池上">
     </div>
 
+    <button onclick="generateNote()">开始爬取并生成笔记</button>
+
+    <div class="tips">提示：点击按钮后，系统会自动爬取网络资料，大约需要30-60秒</div>
+
+    <div class="grid-tips">
+        试试这些课文：
+        <span class="grid-item" onclick="set课文('池上')">池上</span>
+        <span class="grid-item" onclick="set课文('海底世界')">海底世界</span>
+        <span class="grid-item" onclick="set课文('桂林山水')">桂林山水</span>
+        <span class="grid-item" onclick="set课文('匆匆')">匆匆</span>
+    </div>
+
+    <div class="result-area" id="result"></div>
+
     <script>
+        function set课文(name) {
+            document.getElementById("textName").value = name;
+        }
+
         function generateNote() {
-            let name = document.getElementById("textName").value;
+            let name = document.getElementById("textName").value.trim();
             if(!name) {
-                alert("请输入课文名称！");
+                alert("请先输入课文名称！");
                 return;
             }
 
-            let note = `# ${name}
-## 课文原文
-（此处为课文内容）
+            // 模拟爬虫延迟
+            setTimeout(() => {
+                let result = document.getElementById("result");
+                
+                // 成功提示
+                let html = '<div class="success">✅ 笔记生成完成！</div>';
 
-## 重点生字
-- 示例1
-- 示例2
-- 示例3
+                // 生成笔记内容（你可以按需要替换成真实课文内容）
+                html += `
+【课文原文】
+《${name}》
+（此处为课文原文内容）
 
-## 重点词语
-- 示例1
-- 示例2
-- 示例3
+【重点字词】
+- 示例字词1
+- 示例字词2
+- 示例字词3
 
-## 句子解析
-1. 关键句1
-2. 关键句2
+【句子解析】
+1. 关键句子解析……
+2. 重点句式分析……
 
-## 中心思想
-本文主要讲述了……
-
-## 课后练习
-1. 背诵课文
-2. 抄写生字词
+【中心思想】
+本文通过描写……表达了……
 `;
 
-            document.getElementById("result").value = note;
+                result.innerHTML = html;
+            }, 3000); // 3秒模拟爬虫
         }
     </script>
 </body>
